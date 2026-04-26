@@ -18,4 +18,10 @@ public:
 
     virtual QList<QVariantMap> query(const QString &sql,
                                      const QVariantMap &bindings = {}) = 0;
+
+    virtual qint64 lastInsertId() const = 0;
+
+    virtual bool beginTransaction()    = 0;
+    virtual bool commitTransaction()   = 0;
+    virtual bool rollbackTransaction() = 0;
 };

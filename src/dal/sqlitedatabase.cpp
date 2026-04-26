@@ -23,6 +23,7 @@ bool SqliteDatabase::open()
         return false;
     }
 
+    execute("PRAGMA foreign_keys = ON;");
     return true;
 }
 
@@ -82,4 +83,19 @@ QList<QVariantMap> SqliteDatabase::query(const QString &sql, const QVariantMap &
 qint64 SqliteDatabase::lastInsertId() const
 {
     return m_lastInsertId;
+}
+
+bool SqliteDatabase::beginTransaction()
+{
+    return m_db.transaction();
+}
+
+bool SqliteDatabase::commitTransaction()
+{
+    return m_db.commit();
+}
+
+bool SqliteDatabase::rollbackTransaction()
+{
+    return m_db.rollback();
 }

@@ -1,23 +1,35 @@
 #pragma once
 
-#include <QString>
-#include <QList>
-#include <QVariantMap>
+#include "idatabase.h"
 
-class IDatabase
+#include <QSqlDatabase>
+#include <QSqlRecord>
+#include <QString>
+
+class SqliteDatabase : public IDatabase
 {
 public:
-    virtual ~IDatabase() = default;
+    explicit SqliteDatabase(const QString &path);
+    ~SqliteDatabase() override;
 
-    virtual bool open()  = 0;
-    virtual void close() = 0;
-    virtual bool isOpen() const = 0;
+    bool open()  override;
+    void close() override;
+    bool isOpen() const override;
 
-    virtual bool execute(const QString &sql,
-                         const QVariantMap &bindings = {}) = 0;
+    bool execute(const QString &sql,
+                 const QVariantMap &bindings = {}) override;
 
-    virtual QList<QVariantMap> query(const QString &sql,
-                                     const QVariantMap &bindings = {}) = 0;
+    QList<QVariantMap> query(const QString &sql,
+                              const QVariantMap &bindings = {}) override;
 
-    virtual qint64 lastInsertId() const = 0;
+    qint64 lastInsertId() const override;
+
+    bool beginTransaction()    override;
+    bool commitTransaction()   override;
+    bool rollbackTransaction() override;
+
+private:
+    QString       m_path;
+    QSqlDatabase  m_db;
+    qint64        m_lastInsertId = -1;
 };
