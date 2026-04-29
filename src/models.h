@@ -5,10 +5,13 @@
 
 struct Snippet
 {
-    int     id       = -1;
+    int     id         = -1;
     QString title;
     QString code;
     QString category;
+    QList<QString> tags;
+    QString createdAt;
+    QString updatedAt;
 };
 
 struct Solution
@@ -18,6 +21,18 @@ struct Solution
     QString code;
     QString platform;
     int     difficulty = 0;
+    QString problemUrl;
+    QList<QString> topics;
+    QString createdAt;
+    QString updatedAt;
+};
+
+struct StressTestRun
+{
+    int     id            = -1;
+    QString generatorPath;
+    QString brutePath;
+    QString optimizedPath;
 };
 
 struct SearchResult
@@ -27,4 +42,5 @@ struct SearchResult
     int     id;
     Type    type;
     QString title;
+    QString subtitle;
 };
