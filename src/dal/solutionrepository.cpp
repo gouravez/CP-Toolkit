@@ -45,6 +45,17 @@ int SolutionRepository::create(const Solution &solution)
     return ok ? static_cast<int>(m_db->lastInsertId()) : -1;
 }
 
+Solution SolutionRepository::getById(int id)
+{
+    auto rows = m_db->query(
+        "SELECT * FROM solutions WHERE id = :id;",
+        {{":id", id}}
+    );
+    if (rows.isEmpty())
+        return {};
+    return rowToSolution(rows.first());
+}
+
 QList<Solution> SolutionRepository::getAll()
 {
     auto rows = m_db->query("SELECT * FROM solutions ORDER BY title ASC;");

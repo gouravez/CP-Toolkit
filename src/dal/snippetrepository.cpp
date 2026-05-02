@@ -41,6 +41,17 @@ int SnippetRepository::create(const Snippet &snippet)
     return ok ? static_cast<int>(m_db->lastInsertId()) : -1;
 }
 
+Snippet SnippetRepository::getById(int id)
+{
+    auto rows = m_db->query(
+        "SELECT * FROM snippets WHERE id = :id;",
+        {{":id", id}}
+    );
+    if (rows.isEmpty())
+        return {};
+    return rowToSnippet(rows.first());
+}
+
 QList<Snippet> SnippetRepository::getAll()
 {
     auto rows = m_db->query("SELECT * FROM snippets ORDER BY title ASC;");
