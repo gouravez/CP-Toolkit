@@ -15,6 +15,10 @@ public:
                const QList<Solution> &solutions);
 
     QList<SearchResult> search(const QString &query) const;
+    void upsert(const Snippet &snippet);
+    void upsert(const Solution &solution);
+    void removeSnippet(int id);
+    void removeSolution(int id);
 
 private:
     QList<QString> tokenize(const QString &text) const;
