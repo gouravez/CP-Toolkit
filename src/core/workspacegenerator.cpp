@@ -4,46 +4,104 @@
 #include <QFile>
 #include <QTextStream>
 
-WorkspaceGenerator::Result WorkspaceGenerator::generate(const Config &config)
+void WorkspaceGenerator::setBaseDirectory(const QString &dir)
 {
-    Result result;
+    m_baseDir = dir;
+}
 
-    if (config.contestName.trimmed().isEmpty()) {
-        result.message = "Contest name cannot be empty.";
-        return result;
+void WorkspaceGenerator::setContestName(const QString &name)
+{
+    m_contestName = name;
+}
+
+void WorkspaceGenerator::setProblemCount(int count)
+{
+    m_problemCount = qBound(1, count, 26);
+}
+
+QString WorkspaceGenerator::workspacePath() const
+{
+    return m_workspacePath;
+}
+
+QString WorkspaceGenerator::problemFilePath(const QString &letter) const
+{
+    if (m_workspacePath.isEmpty())
+        return {};
+    return QDir(m_workspacePath).filePath(letter + QStringLiteral(".cpp"));
+}
+
+QList<QString> WorkspaceGenerator::problemLetters() const
+{
+    return m_letters;
+}
+
+QString WorkspaceGenerator::errorString() const
+{
+    return m_errorString;
+}
+
+bool WorkspaceGenerator::create()
+{
+    m_letters.clear();
+    m_workspacePath.clear();
+    m_errorString.clear();
+
+    if (m_baseDir.isEmpty()) {
+        m_errorString = QStringLiteral("Base directory is not set.");
+        return false;
     }
 
-    if (config.problems.isEmpty()) {
-        result.message = "No problems specified.";
-        return result;
+    if (m_contestName.trimmed().isEmpty()) {
+        m_errorString = QStringLiteral("Contest name must not be empty.");
+        return false;
     }
 
-    QDir base(config.basePath);
-    QString folderName = config.contestName.trimmed();
-    folderName.replace(' ', '_');
+    const QString folderName = m_contestName.trimmed();
+    QDir base(m_baseDir);
+
+    if (!base.exists()) {
+        m_errorString = QStringLiteral("Base directory does not exist: %1").arg(m_baseDir);
+        return false;
+    }
 
     if (!base.mkpath(folderName)) {
-        result.message = "Failed to create contest directory.";
-        return result;
+        m_errorString = QStringLiteral("Failed to create workspace directory.");
+        return false;
     }
 
-    QString contestPath = base.filePath(folderName);
+    m_workspacePath = base.absoluteFilePath(folderName);
+    QDir workspace(m_workspacePath);
 
-    for (const QString &problem : config.problems) {
-        QString filePath = contestPath + "/" + problem + ".cpp";
-        QFile file(filePath);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-            continue;
+    for (int i = 0; i < m_problemCount; ++i) {
+        const QString letter = QString(QChar(QLatin1Char(static_cast<char>('A' + i))));
+        const QString path   = workspace.filePath(letter + QStringLiteral(".cpp"));
 
-        QTextStream out(&file);
-        if (!config.boilerplate.isEmpty())
-            out << config.boilerplate;
-        else
-            out << "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n";
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            m_errorString = QStringLiteral("Could not write file: %1").arg(path);
+            return false;
+        }
+
+        QTextStream ts(&file);
+        ts << defaultTemplate();
+
+        m_letters.append(letter);
     }
 
-    result.success       = true;
-    result.message       = "Workspace created successfully.";
-    result.workspacePath = contestPath;
-    return result;
+    return true;
+}
+
+QString WorkspaceGenerator::defaultTemplate() const
+{
+    return QStringLiteral(
+        "#include <bits/stdc++.h>\n"
+        "using namespace std;\n\n"
+        "int main()\n"
+        "{\n"
+        "    ios::sync_with_stdio(false);\n"
+        "    cin.tie(nullptr);\n\n"
+        "    // TODO\n\n"
+        "    return 0;\n"
+        "}\n");
 }

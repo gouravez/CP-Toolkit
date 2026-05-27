@@ -1,23 +1,32 @@
 #pragma once
 
-#include <QString>
 #include <QList>
+#include <QString>
 
 class WorkspaceGenerator
 {
 public:
-    struct Config {
-        QString contestName;
-        QString basePath;
-        QList<QString> problems;
-        QString boilerplate;
-    };
+    WorkspaceGenerator() = default;
 
-    struct Result {
-        bool    success = false;
-        QString message;
-        QString workspacePath;
-    };
+    void setBaseDirectory(const QString &dir);
+    void setContestName(const QString &name);
+    void setProblemCount(int count);
 
-    Result generate(const Config &config);
+    bool create();
+
+    QString workspacePath() const;
+    QString problemFilePath(const QString &letter) const;
+    QList<QString> problemLetters() const;
+    QString errorString() const;
+
+private:
+    QString defaultTemplate() const;
+
+    QString m_baseDir;
+    QString m_contestName;
+    int     m_problemCount = 6;
+
+    QString        m_workspacePath;
+    QList<QString> m_letters;
+    QString        m_errorString;
 };
