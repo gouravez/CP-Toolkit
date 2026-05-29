@@ -2,21 +2,21 @@
 
 #include "../models.h"
 
-#include <QString>
 #include <QList>
+#include <QString>
 
 class TemplateGenerator
 {
 public:
-    struct Result {
-        bool    success = false;
-        QString code;
-        QString message;
-    };
+    TemplateGenerator() = default;
 
-    Result generate(const QList<Snippet> &snippets);
+    void setSnippets(const QList<Snippet> &snippets);
+    QString generate() const;
 
 private:
-    QList<QString> extractIncludes(const QString &code);
-    QString        removeIncludes(const QString &code);
+    QList<QString> extractIncludes(const QString &code) const;
+    QString stripIncludes(const QString &code) const;
+    QString toNamespaceId(const QString &title) const;
+
+    QList<Snippet> m_snippets;
 };
