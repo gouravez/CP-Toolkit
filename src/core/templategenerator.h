@@ -12,6 +12,7 @@ public:
 
     void setSnippets(const QList<Snippet> &snippets);
     QString generate() const;
+    bool exportToFile(const QString &filePath) const;
 
 private:
     QList<QString> extractIncludes(const QString &code) const;

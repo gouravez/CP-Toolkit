@@ -3,6 +3,7 @@
 #include <QRegularExpression>
 #include <QSet>
 #include <QTextStream>
+#include <QFile>
 
 void TemplateGenerator::setSnippets(const QList<Snippet> &snippets)
 {
@@ -51,6 +52,17 @@ QString TemplateGenerator::generate() const
     ts << "    return 0;\n}\n";
 
     return out;
+}
+
+bool TemplateGenerator::exportToFile(const QString &filePath) const
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+
+    QTextStream ts(&file);
+    ts << generate();
+    return true;
 }
 
 QList<QString> TemplateGenerator::extractIncludes(const QString &code) const
