@@ -73,6 +73,17 @@ QList<Snippet> SnippetRepository::getByCategory(const QString &category)
     return result;
 }
 
+QList<QString> SnippetRepository::getCategories()
+{
+    auto rows = m_db->query(
+        "SELECT DISTINCT category FROM snippets WHERE category != '' ORDER BY category ASC;"
+    );
+    QList<QString> result;
+    for (const auto &row : rows)
+        result.append(row["category"].toString());
+    return result;
+}
+
 bool SnippetRepository::update(const Snippet &snippet)
 {
     QString now = QDateTime::currentDateTime().toString(Qt::ISODate);

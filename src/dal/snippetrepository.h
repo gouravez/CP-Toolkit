@@ -16,6 +16,7 @@ public:
     Snippet     getById(int id);
     QList<Snippet> getAll();
     QList<Snippet> getByCategory(const QString &category);
+    QList<QString> getCategories();
     bool        update(const Snippet &snippet);
     bool        remove(int id);
 

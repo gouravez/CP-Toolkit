@@ -17,6 +17,7 @@ public:
     QList<Solution> getAll();
     QList<Solution> getByPlatform(const QString &platform);
     QList<Solution> getByDifficulty(int min, int max);
+    QList<QString> getPlatforms();
     bool           update(const Solution &solution);
     bool           remove(int id);
 

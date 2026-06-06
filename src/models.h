@@ -33,6 +33,8 @@ struct StressTestRun
     QString generatorPath;
     QString brutePath;
     QString optimizedPath;
+    QString status;
+    QString lastRunAt;
 };
 
 struct SearchResult

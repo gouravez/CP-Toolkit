@@ -161,15 +161,24 @@ void MainWindow::buildSearchIndex()
 
 void MainWindow::refreshSnippets()
 {
-    const QList<Snippet> snippets = m_snippetRepo->getAll();
+    const QList<Snippet> snippets   = m_snippetRepo->getAll();
+    const QList<QString> categories = m_snippetRepo->getCategories();
+
     m_snippetList->setSnippets(snippets);
+    m_snippetList->setCategories(categories);
+    m_snippetEditor->setKnownCategories(categories);
+
     m_templateView->setSnippets(snippets);
 }
 
 void MainWindow::refreshSolutions()
 {
     const QList<Solution> solutions = m_solutionRepo->getAll();
+    const QList<QString>  platforms = m_solutionRepo->getPlatforms();
+
     m_solutionList->setSolutions(solutions);
+    m_solutionList->setPlatforms(platforms);
+    m_solutionEditor->setKnownPlatforms(platforms);
 }
 
 void MainWindow::onSidebarItemSelected(int index)

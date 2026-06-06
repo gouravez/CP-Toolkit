@@ -89,6 +89,17 @@ QList<Solution> SolutionRepository::getByDifficulty(int min, int max)
     return result;
 }
 
+QList<QString> SolutionRepository::getPlatforms()
+{
+    auto rows = m_db->query(
+        "SELECT DISTINCT platform FROM solutions WHERE platform != '' ORDER BY platform ASC;"
+    );
+    QList<QString> result;
+    for (const auto &row : rows)
+        result.append(row["platform"].toString());
+    return result;
+}
+
 bool SolutionRepository::update(const Solution &solution)
 {
     QString now = QDateTime::currentDateTime().toString(Qt::ISODate);
