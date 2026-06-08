@@ -80,6 +80,11 @@ void SolutionEditorView::setupUI()
 
     QHBoxLayout *actions = new QHBoxLayout;
 
+    m_clearBtn = new QPushButton("Clear", this);
+    m_clearBtn->setObjectName("SecondaryButton");
+    connect(m_clearBtn, &QPushButton::clicked, this, &SolutionEditorView::onClearClicked);
+    actions->addWidget(m_clearBtn);
+
     m_saveBtn = new QPushButton("Save", this);
     m_saveBtn->setObjectName("PrimaryButton");
     connect(m_saveBtn, &QPushButton::clicked,
@@ -164,4 +169,10 @@ void SolutionEditorView::onSaveClicked()
     if (s.title.isEmpty())
         return;
     emit saved(s);
+    setCreateMode();
+}
+
+void SolutionEditorView::onClearClicked()
+{
+    setCreateMode();
 }

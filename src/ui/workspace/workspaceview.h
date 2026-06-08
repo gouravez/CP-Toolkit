@@ -22,6 +22,7 @@ private slots:
     void onCreateClicked();
     void onProblemSelected(int row);
     void onSaveClicked();
+    void onClearFormClicked();
 
 private:
     void setupUI();
@@ -36,6 +37,7 @@ private:
     QLineEdit   *m_outputDirEdit    = nullptr;
     QPushButton *m_browseDirBtn     = nullptr;
     QPushButton *m_createBtn        = nullptr;
+    QPushButton *m_clearFormBtn;
     QLabel      *m_statusLabel      = nullptr;
 
     QListWidget *m_fileList         = nullptr;

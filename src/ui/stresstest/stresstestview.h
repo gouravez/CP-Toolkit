@@ -27,6 +27,7 @@ private slots:
 
     void onRunClicked();
     void onStopClicked();
+    void onClearClicked();
 
     void onIterationFinished(const StressTestRunner::IterationResult &result);
     void onFinished(const StressTestRunner::IterationResult &result);
@@ -60,6 +61,7 @@ private:
 
     QPushButton *m_runBtn  = nullptr;
     QPushButton *m_stopBtn = nullptr;
+    QPushButton *m_clearBtn = nullptr;
 
     QLabel    *m_statusLabel = nullptr;
     QTextEdit *m_outputLog   = nullptr;

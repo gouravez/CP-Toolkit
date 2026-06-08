@@ -78,7 +78,12 @@ void SnippetEditorView::setupUI()
     connect(m_saveBtn, &QPushButton::clicked,
             this,      &SnippetEditorView::onSaveClicked);
 
+    m_clearBtn = new QPushButton("Clear", this);
+    m_clearBtn->setObjectName("SecondaryButton");
+    connect(m_clearBtn, &QPushButton::clicked, this, &SnippetEditorView::onClearClicked);
+
     actions->addWidget(m_copyBtn);
+    actions->addWidget(m_clearBtn);
     actions->addStretch();
     actions->addWidget(m_saveBtn);
     root->addLayout(actions);
@@ -153,6 +158,12 @@ void SnippetEditorView::onSaveClicked()
     if (s.title.isEmpty())
         return;
     emit saved(s);
+    setCreateMode();
+}
+
+void SnippetEditorView::onClearClicked()
+{
+    setCreateMode();
 }
 
 void SnippetEditorView::onCopyClicked()

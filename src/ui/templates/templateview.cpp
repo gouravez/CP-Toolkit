@@ -12,6 +12,8 @@
 #include <QLabel>
 #include <QFileDialog>
 #include <QFont>
+#include <QClipboard>
+#include <QApplication>
 
 TemplateView::TemplateView(QWidget *parent)
     : QWidget(parent)
@@ -45,6 +47,10 @@ void TemplateView::setupUI()
     m_exportBtn->setObjectName("PrimaryButton");
     m_exportBtn->setEnabled(false);
 
+    m_copyBtn = new QPushButton("Copy Code", toolbar);
+    m_copyBtn->setObjectName("SecondaryButton");
+    m_copyBtn->setEnabled(false);
+
     m_statusLabel = new QLabel(toolbar);
     m_statusLabel->setObjectName("StatusLabel");
 
@@ -53,6 +59,7 @@ void TemplateView::setupUI()
     toolbarLayout->addWidget(m_statusLabel);
     toolbarLayout->addWidget(m_selectAllBtn);
     toolbarLayout->addWidget(m_clearBtn);
+    toolbarLayout->addWidget(m_copyBtn);
     toolbarLayout->addWidget(m_exportBtn);
     root->addWidget(toolbar);
 
@@ -104,6 +111,9 @@ void TemplateView::setupUI()
     connect(m_exportBtn,   &QPushButton::clicked,
             this,          &TemplateView::onExportClicked);
 
+    connect(m_copyBtn,     &QPushButton::clicked,
+            this,          &TemplateView::onCopyClicked);
+
     connect(m_selectAllBtn, &QPushButton::clicked,
             this,           &TemplateView::onSelectAllClicked);
 
@@ -143,6 +153,7 @@ void TemplateView::regeneratePreview()
     if (selected.isEmpty()) {
         m_preview->setPlainText("// Select snippets on the left to generate a template.");
         m_exportBtn->setEnabled(false);
+        m_copyBtn->setEnabled(false);
         m_statusLabel->clear();
         return;
     }
@@ -151,6 +162,7 @@ void TemplateView::regeneratePreview()
     gen.setSnippets(selected);
     m_preview->setPlainText(gen.generate());
     m_exportBtn->setEnabled(true);
+    m_copyBtn->setEnabled(true);
     m_statusLabel->setText(QString("%1 snippet(s) selected").arg(selected.size()));
 }
 
@@ -210,4 +222,13 @@ void TemplateView::onClearSelectionClicked()
         m_snippetList->item(i)->setCheckState(Qt::Unchecked);
     m_snippetList->blockSignals(false);
     regeneratePreview();
+}
+
+void TemplateView::onCopyClicked()
+{
+    const QString code = m_preview->toPlainText();
+    if (!code.isEmpty()) {
+        QApplication::clipboard()->setText(code);
+        m_statusLabel->setText("Code copied to clipboard!");
+    }
 }

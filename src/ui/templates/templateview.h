@@ -23,6 +23,7 @@ public:
 
 private slots:
     void onSelectionChanged(QListWidgetItem *item);
+    void onCopyClicked();
     void onExportClicked();
     void onSelectAllClicked();
     void onClearSelectionClicked();
@@ -35,6 +36,7 @@ private:
     QListWidget    *m_snippetList   = nullptr;
     QPlainTextEdit *m_preview       = nullptr;
     QPushButton    *m_exportBtn     = nullptr;
+    QPushButton *m_copyBtn = nullptr;
     QPushButton    *m_selectAllBtn  = nullptr;
     QPushButton    *m_clearBtn      = nullptr;
     QLabel         *m_statusLabel   = nullptr;

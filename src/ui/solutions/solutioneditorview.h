@@ -28,6 +28,7 @@ signals:
 
 private slots:
     void onSaveClicked();
+    void onClearClicked();
 
 private:
     void setupUI();
@@ -44,6 +45,7 @@ private:
     QLineEdit      *m_topicsEdit;
     QPlainTextEdit *m_codeEditor;
     QPushButton    *m_saveBtn;
+    QPushButton *m_clearBtn;
 
     CppSyntaxHighlighter *m_highlighter = nullptr;
 };

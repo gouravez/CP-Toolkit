@@ -121,6 +121,12 @@ void StressTestView::setupUI()
     m_stopBtn->setCursor(Qt::PointingHandCursor);
     m_stopBtn->setEnabled(false);
 
+    m_clearBtn = new QPushButton(tr("Clear All"), this);
+    m_clearBtn->setObjectName("SecondaryButton");
+    m_clearBtn->setCursor(Qt::PointingHandCursor);
+    connect(m_clearBtn, &QPushButton::clicked, this, &StressTestView::onClearClicked);
+
+    controls->addWidget(m_clearBtn);
     controls->addWidget(m_runBtn);
     controls->addWidget(m_stopBtn);
 
@@ -341,4 +347,28 @@ QString StressTestView::verdictToString(StressTestRunner::Verdict verdict) const
     case StressTestRunner::Verdict::Stopped:            return tr("Stopped");
     }
     return tr("Unknown");
+}
+
+void StressTestView::onClearClicked()
+{
+    if (m_runner->isRunning())
+        return;
+
+    m_generatorPane.editor->clear();
+    m_generatorPane.filePath.clear();
+    m_generatorPane.pathLabel->setText(tr("No file selected"));
+    m_generatorPane.pathLabel->setToolTip("");
+
+    m_brutePane.editor->clear();
+    m_brutePane.filePath.clear();
+    m_brutePane.pathLabel->setText(tr("No file selected"));
+    m_brutePane.pathLabel->setToolTip("");
+
+    m_optimizedPane.editor->clear();
+    m_optimizedPane.filePath.clear();
+    m_optimizedPane.pathLabel->setText(tr("No file selected"));
+    m_optimizedPane.pathLabel->setToolTip("");
+
+    m_outputLog->clear();
+    m_statusLabel->setText(tr("Idle"));
 }

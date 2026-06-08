@@ -29,6 +29,7 @@ signals:
 private slots:
     void onSaveClicked();
     void onCopyClicked();
+    void onClearClicked();
 
 private:
     void setupUI();
@@ -44,6 +45,7 @@ private:
     QPlainTextEdit *m_codeEditor;
     QPushButton    *m_saveBtn;
     QPushButton    *m_copyBtn;
+    QPushButton *m_clearBtn;
 
     CppSyntaxHighlighter *m_highlighter = nullptr;
 };

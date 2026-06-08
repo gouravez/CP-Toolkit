@@ -85,11 +85,18 @@ void WorkspaceView::setupUI()
     m_createBtn->setCursor(Qt::PointingHandCursor);
     m_createBtn->setFixedWidth(150);
 
+    m_clearFormBtn = new QPushButton(tr("Clear"), formBox);
+    m_clearFormBtn->setObjectName(QStringLiteral("SecondaryButton"));
+    m_clearFormBtn->setCursor(Qt::PointingHandCursor);
+    m_clearFormBtn->setFixedWidth(80);
+    connect(m_clearFormBtn, &QPushButton::clicked, this, &WorkspaceView::onClearFormClicked);
+
     m_statusLabel = new QLabel(formBox);
     m_statusLabel->setObjectName(QStringLiteral("StatusLabel"));
     m_statusLabel->setWordWrap(true);
 
     actionRow->addWidget(m_createBtn);
+    actionRow->addWidget(m_clearFormBtn);
     actionRow->addWidget(m_statusLabel, 1);
     formVLayout->addLayout(actionRow);
 
@@ -286,4 +293,11 @@ void WorkspaceView::setStatusMessage(const QString &msg, bool isError)
     m_statusLabel->setProperty("error", isError);
     m_statusLabel->style()->unpolish(m_statusLabel);
     m_statusLabel->style()->polish(m_statusLabel);
+}
+
+void WorkspaceView::onClearFormClicked()
+{
+    m_contestNameEdit->clear();
+    m_problemCountSpin->setValue(6);
+    setStatusMessage("");
 }
