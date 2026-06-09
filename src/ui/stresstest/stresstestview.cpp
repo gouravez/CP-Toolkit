@@ -22,7 +22,11 @@ StressTestView::StressTestView(QWidget *parent)
     setupUI();
 }
 
-StressTestView::~StressTestView() = default;
+StressTestView::~StressTestView()
+{
+    if (m_runner && m_runner->isRunning())
+        m_runner->stop();
+}
 
 StressTestView::SourcePane StressTestView::buildSourcePane(QWidget *parent, const QString &title)
 {

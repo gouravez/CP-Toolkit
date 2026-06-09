@@ -121,12 +121,19 @@ void SolutionListView::setSolutions(const QList<Solution> &solutions)
 
 void SolutionListView::setPlatforms(const QList<QString> &platforms)
 {
+    const QString previous = m_platformFilter->currentText();
+
     m_platformFilter->blockSignals(true);
     m_platformFilter->clear();
     m_platformFilter->addItem("All Platforms");
     for (const QString &p : platforms)
         m_platformFilter->addItem(p);
+
+    const int idx = m_platformFilter->findText(previous);
+    m_platformFilter->setCurrentIndex(idx >= 0 ? idx : 0);
     m_platformFilter->blockSignals(false);
+
+    applyFilter();
 }
 
 void SolutionListView::applyFilter()
