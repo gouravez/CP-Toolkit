@@ -9,6 +9,30 @@
 
 ---
 
+## 📖 Documentation
+
+| Guide | Description |
+|---------|------------|
+| [Installation Guide](docs/installation.md) | Setup instructions for Windows, Linux, and macOS |
+| [Architecture](docs/architecture.md) | Internal system design and module interactions |
+| [Modules](docs/modules.md) | Detailed breakdown of every feature |
+| [Stress Tester](docs/stress-tester.md) | Complete guide to local stress testing |
+
+---
+
+## 📑 Table of Contents
+
+- [Core Features](#-core-features)
+- [Tech Stack](#-tech-stack)
+- [Quick Start](#-quick-start)
+- [Architecture Overview](#-architecture-overview)
+- [Workflow Tips](#-workflow-tips)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
 # ✨ Core Features
 
 ## 📚 Knowledge Management
@@ -23,6 +47,14 @@ Features:
 - One-click clipboard copy
 - Topic and category organization
 - Fast retrieval during contests
+
+Examples:
+
+- Segment Tree
+- DSU
+- Fenwick Tree
+- Graph Algorithms
+- Number Theory Templates
 
 ---
 
@@ -39,6 +71,14 @@ Store:
 - Notes
 - Solution code
 
+Supported platforms:
+
+- Codeforces
+- LeetCode
+- AtCoder
+- CSES
+- CodeChef
+
 ---
 
 ### Lightning-Fast Global Search
@@ -51,19 +91,57 @@ Ctrl + K
 
 Powered by an in-memory inverted index capable of returning results in under 200ms.
 
+Search across:
+
+- Snippet titles
+- Tags
+- Categories
+- Problem archives
+
 ---
 
 ## ⚡ Contest Environment
 
 ### Contest Workspace Generator
 
-Generate a contest setup in seconds — folders, source files, and boilerplate templates, all in one click.
+Generate a contest setup in seconds.
+
+Input:
+
+```text
+Contest Name: Codeforces Round 1024
+Problems: A-F
+```
+
+CPT automatically:
+
+- Creates folders
+- Generates source files
+- Applies boilerplate templates
+- Organizes workspace structure
 
 ---
 
 ### Template Assembler
 
-Combine multiple snippets into one submission-ready file. Automatically removes duplicate includes and wraps each snippet in its own namespace to avoid symbol collisions.
+Combine multiple snippets into one submission-ready file.
+
+Example:
+
+```text
+Fast I/O
++
+DSU
++
+Fenwick Tree
+```
+
+The assembler automatically:
+
+- Removes duplicate includes
+- Resolves naming conflicts
+- Wraps snippets in namespaces
+- Produces clean final code
 
 ---
 
@@ -71,7 +149,37 @@ Combine multiple snippets into one submission-ready file. Automatically removes 
 
 ### Local Stress Tester
 
-Find hidden edge cases before submitting. Provide a generator, brute-force solution, and optimized solution — CPT runs them continuously, compares outputs, and shows the failing test case the moment a mismatch is found.
+Find hidden edge cases before submitting.
+
+Provide:
+
+1. Generator
+2. Brute Force Solution
+3. Optimized Solution
+
+CPT will:
+
+- Run tests continuously
+- Compare outputs
+- Detect mismatches instantly
+- Show failing test case
+- Enforce execution timeouts
+
+---
+
+### Safe Execution
+
+Temporary files are created using:
+
+```cpp
+QTemporaryDir
+```
+
+Benefits:
+
+- No leftover binaries
+- No manual cleanup
+- Safer execution environment
 
 ---
 
@@ -84,9 +192,19 @@ Find hidden edge cases before submitting. Provide a generator, brute-force solut
 | Database | SQLite |
 | Build System | CMake 3.20+ |
 
+Qt Modules:
+
+- Qt Widgets
+- Qt Core
+- Qt SQL
+
 ---
 
 # 🚀 Quick Start
+
+For complete setup instructions, see:
+
+📖 **[Installation Guide](docs/installation.md)**
 
 ## Clone Repository
 
@@ -118,6 +236,141 @@ build\CPT.exe
 
 ---
 
+# 🏗 Architecture Overview
+
+The project follows a layered architecture.
+
+```text
+UI Layer
+    │
+    ▼
+Core Logic Layer
+    │
+    ▼
+Data Access Layer
+    │
+    ▼
+SQLite Database
+```
+
+### src/ui/
+
+Responsible for:
+
+- Widgets
+- Forms
+- Views
+- Syntax Highlighting
+
+---
+
+### src/core/
+
+Contains:
+
+- Search Engine
+- Stress Test Runner
+- Workspace Generator
+- Template Assembler
+
+---
+
+### src/dal/
+
+Handles:
+
+- SQLite access
+- Queries
+- Prepared statements
+- Repository implementations
+
+---
+
+### src/models.h
+
+Plain data-transfer objects shared between layers.
+
+For more details see:
+
+📖 [Architecture Documentation](docs/architecture.md)
+
+---
+
+# 💡 Workflow Tips
+
+### Deterministic Stress Testing
+
+The iteration number is passed as:
+
+```cpp
+argv[1]
+```
+
+Use it as a random seed:
+
+```cpp
+mt19937 rng(atoi(argv[1]));
+```
+
+This guarantees reproducible failures.
+
+---
+
+### Form Resets
+
+Use the **Clear** buttons in:
+
+- Snippets
+- Solutions
+- Stress Tester
+
+to quickly start the next problem.
+
+---
+
+# 🗺 Roadmap
+
+- [ ] Dark / Light Theme Toggle
+- [ ] GitHub Gist Synchronization
+- [ ] Competitive Companion Integration
+- [ ] Graph Visualizer
+- [ ] Tree Visualizer
+- [ ] Contest Analytics Dashboard
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome.
+
+```bash
+# Fork repository
+
+git checkout -b feature/amazing-feature
+
+git commit -m "Add amazing feature"
+
+git push origin feature/amazing-feature
+```
+
+Then open a Pull Request.
+
+---
+
 # 📜 License
 
-Distributed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License.
+
+See the [LICENSE](LICENSE) file for details.
+
+---
+
+## ⭐ Support
+
+If you find this project useful:
+
+- Star the repository
+- Share it with fellow competitive programmers
+- Suggest new features through Issues
+
+Happy Coding! 🚀
