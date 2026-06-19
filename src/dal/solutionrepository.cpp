@@ -1,4 +1,5 @@
 #include "solutionrepository.h"
+#include "stringlistcodec.h"
 
 #include <QDateTime>
 
@@ -36,7 +37,7 @@ int SolutionRepository::create(const Solution &solution)
             {":platform",    solution.platform},
             {":difficulty",  solution.difficulty},
             {":problem_url", solution.problemUrl},
-            {":topics",      solution.topics.join(",")},
+            {":topics",      StringListCodec::encode(solution.topics)},
             {":created_at",  now},
             {":updated_at",  now}
         }
@@ -113,7 +114,7 @@ bool SolutionRepository::update(const Solution &solution)
             {":platform",    solution.platform},
             {":difficulty",  solution.difficulty},
             {":problem_url", solution.problemUrl},
-            {":topics",      solution.topics.join(",")},
+            {":topics",      StringListCodec::encode(solution.topics)},
             {":updated_at",  now},
             {":id",          solution.id}
         }
@@ -142,7 +143,7 @@ Solution SolutionRepository::rowToSolution(const QVariantMap &row)
 
     QString topics = row["topics"].toString();
     if (!topics.isEmpty())
-        s.topics = topics.split(",");
+        s.topics = StringListCodec::decode(topics);
 
     return s;
 }

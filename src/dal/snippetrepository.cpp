@@ -1,4 +1,5 @@
 #include "snippetrepository.h"
+#include "stringlistcodec.h"
 
 #include <QDateTime>
 
@@ -32,7 +33,7 @@ int SnippetRepository::create(const Snippet &snippet)
             {":title",      snippet.title},
             {":code",       snippet.code},
             {":category",   snippet.category},
-            {":tags",       snippet.tags.join(",")},
+            {":tags",       StringListCodec::encode(snippet.tags)},
             {":created_at", now},
             {":updated_at", now}
         }
@@ -94,7 +95,7 @@ bool SnippetRepository::update(const Snippet &snippet)
             {":title",      snippet.title},
             {":code",       snippet.code},
             {":category",   snippet.category},
-            {":tags",       snippet.tags.join(",")},
+            {":tags",       StringListCodec::encode(snippet.tags)},
             {":updated_at", now},
             {":id",         snippet.id}
         }
@@ -121,7 +122,7 @@ Snippet SnippetRepository::rowToSnippet(const QVariantMap &row)
 
     QString tags = row["tags"].toString();
     if (!tags.isEmpty())
-        s.tags = tags.split(",");
+        s.tags = StringListCodec::decode(tags);
 
     return s;
 }
