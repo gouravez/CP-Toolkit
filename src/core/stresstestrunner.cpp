@@ -49,32 +49,54 @@ bool StressTestRunner::compileSource(const QString &sourcePath,
 {
     QProcess compiler;
     compiler.start("g++", {"-O2", "-std=c++17", "-o", outputPath, sourcePath});
+
+    if (!compiler.waitForStarted()) {
+        errorOut = "Could not start 'g++'. Make sure a C++ compiler is "
+                   "installed and available on your PATH.";
+        return false;
+    }
+
     compiler.waitForFinished(15000);
     errorOut = compiler.readAllStandardError();
-    return compiler.exitCode() == 0;
+
+    return compiler.exitStatus() == QProcess::NormalExit
+        && compiler.exitCode()   == 0;
 }
 
 bool StressTestRunner::runWithTimeout(const QString &exePath,
+                                       const QStringList &args,
                                        const QString &input,
                                        QString &stdoutOut,
                                        QString &stderrOut,
-                                       bool &timedOut)
+                                       bool &timedOut,
+                                       bool &failedToStart)
 {
+    timedOut      = false;
+    failedToStart = false;
+
     QProcess proc;
-    proc.start(exePath, {});
-    proc.waitForStarted();
+    proc.start(exePath, args);
+
+    if (!proc.waitForStarted()) {
+        failedToStart = true;
+        return false;
+    }
+
     proc.write(input.toUtf8());
     proc.closeWriteChannel();
 
     timedOut = !proc.waitForFinished(m_timeLimitMs);
     if (timedOut) {
         proc.kill();
+        proc.waitForFinished();
         return false;
     }
 
     stdoutOut = QString::fromUtf8(proc.readAllStandardOutput());
     stderrOut = QString::fromUtf8(proc.readAllStandardError());
-    return proc.exitCode() == 0;
+
+    return proc.exitStatus() == QProcess::NormalExit
+        && proc.exitCode()   == 0;
 }
 
 QString StressTestRunner::makeDiff(const QString &expected,
@@ -140,40 +162,95 @@ void StressTestRunner::start()
     {
         m_currentIteration++;
 
-        QString genOut, genErr;
-        bool timedOut = false;
-
         // pass iteration as argv[1] so generator can seed rng deterministically
         // e.g. mt19937 rng(atoi(argv[1]));
-        QProcess genProc;
-        genProc.start(m_generatorExe, {QString::number(m_currentIteration)});
-        genProc.waitForStarted();
-        genProc.closeWriteChannel();
-        genProc.waitForFinished(m_timeLimitMs);
-        genOut = QString::fromUtf8(genProc.readAllStandardOutput());
-        
+        QString genOut, genErr;
+        bool genTimedOut = false, genFailedToStart = false;
+        const bool genOk = runWithTimeout(
+            m_generatorExe, {QString::number(m_currentIteration)}, QString(),
+            genOut, genErr, genTimedOut, genFailedToStart);
+
+        if (!genOk) {
+            IterationResult result;
+            result.iteration = m_currentIteration;
+
+            if (genTimedOut) {
+                result.verdict      = Verdict::TimeLimitExceeded;
+                result.errorMessage = "Generator exceeded the time limit.";
+            } else if (genFailedToStart) {
+                result.verdict      = Verdict::RuntimeError;
+                result.errorMessage = "Generator could not be started.";
+            } else {
+                result.verdict      = Verdict::RuntimeError;
+                result.errorMessage = "Generator exited with an error:\n" + genErr;
+            }
+
+            emit iterationFinished(result);
+            emit finished(result);
+            m_running = false;
+            return;
+        }
+
         QString bruteOut, bruteErr;
-        bool bruteTLE = false;
-        runWithTimeout(m_bruteExe, genOut, bruteOut, bruteErr, bruteTLE);
+        bool bruteTimedOut = false, bruteFailedToStart = false;
+        const bool bruteOk = runWithTimeout(
+            m_bruteExe, {}, genOut, bruteOut, bruteErr, bruteTimedOut, bruteFailedToStart);
+
+        if (!bruteOk) {
+            IterationResult result;
+            result.iteration = m_currentIteration;
+            result.input     = genOut;
+
+            if (bruteTimedOut) {
+                result.verdict      = Verdict::TimeLimitExceeded;
+                result.errorMessage = "Brute-force solution exceeded the time limit.";
+            } else if (bruteFailedToStart) {
+                result.verdict      = Verdict::RuntimeError;
+                result.errorMessage = "Brute-force solution could not be started.";
+            } else {
+                result.verdict      = Verdict::RuntimeError;
+                result.errorMessage = "Brute-force solution exited with an error:\n" + bruteErr;
+            }
+
+            emit iterationFinished(result);
+            emit finished(result);
+            m_running = false;
+            return;
+        }
 
         QString optOut, optErr;
-        bool optTLE = false;
-        runWithTimeout(m_optimizedExe, genOut, optOut, optErr, optTLE);
+        bool optTimedOut = false, optFailedToStart = false;
+        const bool optOk = runWithTimeout(
+            m_optimizedExe, {}, genOut, optOut, optErr, optTimedOut, optFailedToStart);
+
+        if (!optOk) {
+            IterationResult result;
+            result.iteration   = m_currentIteration;
+            result.input       = genOut;
+            result.bruteOutput = bruteOut;
+
+            if (optTimedOut) {
+                result.verdict      = Verdict::TimeLimitExceeded;
+                result.errorMessage = "Optimized solution exceeded the time limit.";
+            } else if (optFailedToStart) {
+                result.verdict      = Verdict::RuntimeError;
+                result.errorMessage = "Optimized solution could not be started.";
+            } else {
+                result.verdict      = Verdict::RuntimeError;
+                result.errorMessage = "Optimized solution exited with an error:\n" + optErr;
+            }
+
+            emit iterationFinished(result);
+            emit finished(result);
+            m_running = false;
+            return;
+        }
 
         IterationResult result;
         result.iteration       = m_currentIteration;
         result.input           = genOut;
         result.bruteOutput     = bruteOut;
         result.optimizedOutput = optOut;
-
-        if (optTLE) {
-            result.verdict      = Verdict::TimeLimitExceeded;
-            result.errorMessage = "Optimized solution exceeded time limit.";
-            emit iterationFinished(result);
-            emit finished(result);
-            m_running = false;
-            return;
-        }
 
         if (bruteOut.trimmed() != optOut.trimmed()) {
             result.verdict = Verdict::Mismatch;

@@ -267,7 +267,7 @@ void StressTestView::onStopClicked()
 
 void StressTestView::onIterationFinished(const StressTestRunner::IterationResult &result)
 {
-    if (result.verdict == StressTestRunner::Verdict::Running) {
+    if (result.verdict == StressTestRunner::Verdict::Accepted) {
         m_statusLabel->setText(tr("Running... iteration %1").arg(result.iteration));
         appendLog(tr("Iteration %1: OK").arg(result.iteration), QStringLiteral("#98c379"));
     }

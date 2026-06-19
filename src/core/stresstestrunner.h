@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QTemporaryDir>
 #include <atomic>
 
@@ -59,10 +60,12 @@ private:
                        QString &errorOut);
 
     bool runWithTimeout(const QString &exePath,
+                        const QStringList &args,
                         const QString &input,
                         QString &stdoutOut,
                         QString &stderrOut,
-                        bool &timedOut);
+                        bool &timedOut,
+                        bool &failedToStart);
 
     QString m_generatorPath;
     QString m_brutePath;
