@@ -41,7 +41,6 @@ bool StressTestRunner::isRunning() const
 void StressTestRunner::stop()
 {
     m_stopRequested = true;
-    m_running       = false;
 }
 
 bool StressTestRunner::compileSource(const QString &sourcePath,

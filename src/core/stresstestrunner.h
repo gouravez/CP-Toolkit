@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QTemporaryDir>
+#include <atomic>
 
 class StressTestRunner : public QObject
 {
@@ -68,11 +69,11 @@ private:
     QString m_optimizedPath;
 
     int  m_timeLimitMs = 2000;
-    bool m_running     = false;
+    std::atomic<bool> m_running{false};
 
     QTemporaryDir m_tempDir;
 
-    bool m_stopRequested    = false;
+    std::atomic<bool> m_stopRequested{false};
     int  m_currentIteration = 0;
     int  m_maxIterations    = 1000;
     QString m_generatorExe;

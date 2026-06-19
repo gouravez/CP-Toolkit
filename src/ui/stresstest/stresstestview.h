@@ -10,6 +10,7 @@ class QPushButton;
 class QLabel;
 class QSpinBox;
 class QTextEdit;
+class QThread;
 class CppSyntaxHighlighter;
 
 class StressTestView : public QWidget
@@ -67,6 +68,7 @@ private:
     QTextEdit *m_outputLog   = nullptr;
 
     std::unique_ptr<StressTestRunner> m_runner;
+    QThread *m_workerThread = nullptr;
     CppSyntaxHighlighter *m_genHighlighter   = nullptr;
     CppSyntaxHighlighter *m_bruteHighlighter = nullptr;
     CppSyntaxHighlighter *m_optHighlighter   = nullptr;

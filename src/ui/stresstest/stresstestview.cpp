@@ -9,10 +9,12 @@
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMetaObject>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextEdit>
+#include <QThread>
 #include <QVBoxLayout>
 
 StressTestView::StressTestView(QWidget *parent)
@@ -26,6 +28,11 @@ StressTestView::~StressTestView()
 {
     if (m_runner && m_runner->isRunning())
         m_runner->stop();
+
+    if (m_workerThread) {
+        m_workerThread->quit();
+        m_workerThread->wait();
+    }
 }
 
 StressTestView::SourcePane StressTestView::buildSourcePane(QWidget *parent, const QString &title)
@@ -151,7 +158,11 @@ void StressTestView::setupUI()
 
     root->addWidget(m_outputLog, 2);
 
-    m_runner = std::make_unique<StressTestRunner>(this);
+    m_runner = std::make_unique<StressTestRunner>();
+
+    m_workerThread = new QThread(this);
+    m_runner->moveToThread(m_workerThread);
+    m_workerThread->start();
 
     connect(m_generatorPane.browseBtn, &QPushButton::clicked, this, &StressTestView::onBrowseGenerator);
     connect(m_brutePane.browseBtn,     &QPushButton::clicked, this, &StressTestView::onBrowseBrute);
@@ -244,7 +255,8 @@ void StressTestView::onRunClicked()
     m_statusLabel->setText(tr("Compiling..."));
     appendLog(tr("Starting stress test run..."));
 
-    m_runner->start();
+    QMetaObject::invokeMethod(m_runner.get(), &StressTestRunner::start,
+                               Qt::QueuedConnection);
 }
 
 void StressTestView::onStopClicked()
