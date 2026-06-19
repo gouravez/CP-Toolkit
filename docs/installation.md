@@ -105,6 +105,13 @@ If a version number is displayed, the setup is complete.
 
 Open a terminal in the root directory of the repository.
 
+> **Note:** `CMakeLists.txt` auto-detects a Qt install under `C:\Qt\*\mingw_64`
+> or `C:\Qt\*\msvc*_64` when `CMAKE_PREFIX_PATH` isn't already set, so the
+> commands below usually work without any extra flags, regardless of your
+> exact Qt version. If you installed Qt somewhere non-standard, or have
+> multiple versions and want a specific one, pass it explicitly:
+> `-DCMAKE_PREFIX_PATH="C:\Qt\6.8.3\mingw_64"`.
+
 ### MinGW Build
 
 ```bash
@@ -235,6 +242,35 @@ Could not find a package configuration file provided by "Qt6"
 ```
 
 **Solution:** Ensure Qt is installed and that `CMAKE_PREFIX_PATH` points to the correct Qt installation directory.
+
+### Generator / Qt Kit Mismatch
+
+```text
+LINK : fatal error LNK1104: cannot open file 'mingw32.lib'
+```
+
+**Cause:** You're building with the Visual Studio generator (CMake's
+default on Windows) but only have the **MinGW** Qt kit installed, or
+you're using a MinGW generator with only the **MSVC** Qt kit installed.
+The generator and the Qt kit must use the same toolchain — Qt's CMake
+config files bake in linker flags specific to whichever toolchain built
+that kit, and they aren't interchangeable.
+
+**Solution:** Either build with the generator that matches the Qt kit
+you have installed:
+
+```bash
+cmake -B build -G "MinGW Makefiles"
+cmake --build build
+```
+
+or install the matching Qt kit via the Qt Maintenance Tool and keep
+using the default Visual Studio generator:
+
+```bash
+cmake -B build
+cmake --build build
+```
 
 ### Compiler Not Found
 

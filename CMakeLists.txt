@@ -12,6 +12,25 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+if(NOT CMAKE_PREFIX_PATH AND WIN32)
+    file(GLOB _qt_mingw_dirs "C:/Qt/*/mingw_64")
+    file(GLOB _qt_msvc_dirs  "C:/Qt/*/msvc*_64")
+
+    if(CMAKE_GENERATOR MATCHES "MinGW")
+        set(_qt_candidates ${_qt_mingw_dirs} ${_qt_msvc_dirs})
+    elseif(CMAKE_GENERATOR MATCHES "Visual Studio" OR CMAKE_GENERATOR MATCHES "Ninja")
+        set(_qt_candidates ${_qt_msvc_dirs} ${_qt_mingw_dirs})
+    else()
+        set(_qt_candidates ${_qt_mingw_dirs} ${_qt_msvc_dirs})
+    endif()
+
+    if(_qt_candidates)
+        list(GET _qt_candidates 0 _qt_auto_path)
+        set(CMAKE_PREFIX_PATH "${_qt_auto_path}")
+        message(STATUS "Auto-detected Qt install: ${CMAKE_PREFIX_PATH} (generator: ${CMAKE_GENERATOR})")
+    endif()
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS
     Core
     Widgets

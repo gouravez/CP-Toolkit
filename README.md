@@ -120,6 +120,14 @@ CPT automatically:
 - Applies boilerplate templates
 - Organizes workspace structure
 
+**Custom templates:** by default CPT seeds every problem file with a
+built-in boilerplate (fast I/O, `bits/stdc++.h`, empty `main()`). You can
+override this with your own template instead — click **Browse…** next to
+**Template file** in the Workspace view and pick any `.cpp`/`.h` file with
+your preferred includes, macros, and skeleton. The file is re-read from
+disk each time you create a workspace, so edits are picked up
+automatically. Click **Use Default** to revert.
+
 ---
 
 ### Template Assembler
@@ -219,6 +227,33 @@ cd CP-Toolkit
 cmake -B build
 cmake --build build
 ```
+
+> **Windows users:** `CMakeLists.txt` auto-detects a Qt installation under
+> `C:\Qt\*\mingw_64` (MinGW) or `C:\Qt\*\msvc*_64` (MSVC) if
+> `CMAKE_PREFIX_PATH` isn't already set. It tries to match whichever kit
+> goes with your generator, but it can only pick from what you've actually
+> installed — **the generator and the Qt kit must agree**, or the linker
+> will fail with something like `LNK1104: cannot open file 'mingw32.lib'`.
+>
+> By default, `cmake -B build` on Windows uses the Visual Studio generator,
+> which expects an **MSVC** Qt kit (e.g. `C:\Qt\<version>\msvc2019_64`).
+> If you only have the **MinGW** Qt kit installed (the default option in
+> the Qt Maintenance Tool), build with the matching MinGW generator
+> instead:
+>
+> ```bash
+> cmake -B build -G "MinGW Makefiles"
+> cmake --build build
+> ```
+>
+> This requires the MinGW toolchain that ships with Qt
+> (`C:\Qt\Tools\mingw_64\bin`, or your Qt version's equivalent) to be on
+> your `PATH` ahead of any other compiler. If you'd rather keep the default
+> Visual Studio generator, install the matching MSVC Qt kit instead via the
+> Qt Maintenance Tool. To force a specific Qt install path explicitly:
+> `cmake -B build -DCMAKE_PREFIX_PATH="C:\Qt\<version>\mingw_64"`. See the
+> [Installation Guide](docs/installation.md#-common-issues) for further
+> troubleshooting.
 
 ## Run
 
