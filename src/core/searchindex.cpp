@@ -1,134 +1,157 @@
 #include "searchindex.h"
 
-#include <QRegularExpression>
+#include <QStringList>
+#include <algorithm>
 
+// ---------------------------------------------------------------------------
 void SearchIndex::build(const QList<Snippet> &snippets,
                         const QList<Solution> &solutions)
 {
     m_index.clear();
     m_allResults.clear();
 
-    for (const auto &s : snippets) {
-        SearchResult r;
-        r.id       = s.id;
-        r.type     = SearchResult::Type::Snippet;
-        r.title    = s.title;
-        r.subtitle = s.category;
-        m_allResults.append(r);
+    for (const Snippet &s : snippets)
+        upsert(s);
 
-        for (const auto &token : tokenize(s.title))
-            m_index[token].append(r);
-        for (const auto &tag : s.tags)
-            for (const auto &token : tokenize(tag))
-                m_index[token].append(r);
-    }
-
-    for (const auto &s : solutions) {
-        SearchResult r;
-        r.id       = s.id;
-        r.type     = SearchResult::Type::Solution;
-        r.title    = s.title;
-        r.subtitle = s.platform;
-        m_allResults.append(r);
-
-        for (const auto &token : tokenize(s.title))
-            m_index[token].append(r);
-        for (const auto &topic : s.topics)
-            for (const auto &token : tokenize(topic))
-                m_index[token].append(r);
-    }
+    for (const Solution &s : solutions)
+        upsert(s);
 }
 
-QList<SearchResult> SearchIndex::search(const QString &query) const
-{
-    if (query.trimmed().isEmpty())
-        return {};
-
-    QString lower = query.toLower().trimmed();
-    QList<SearchResult> exact;
-    QList<SearchResult> rest;
-
-    for (const auto &token : tokenize(query)) {
-        if (!m_index.contains(token))
-            continue;
-        for (const auto &r : m_index[token]) {
-            bool already = false;
-            for (const auto &e : exact)
-                if (e.id == r.id && e.type == r.type) { already = true; break; }
-            for (const auto &e : rest)
-                if (e.id == r.id && e.type == r.type) { already = true; break; }
-            if (already) continue;
-
-            if (r.title.toLower() == lower)
-                exact.append(r);
-            else
-                rest.append(r);
-        }
-    }
-
-    return exact + rest;
-}
-
-QList<QString> SearchIndex::tokenize(const QString &text) const
-{
-    return text.toLower().split(QRegularExpression("\\W+"),
-                                Qt::SkipEmptyParts);
-}
-
+// ---------------------------------------------------------------------------
 void SearchIndex::upsert(const Snippet &snippet)
 {
     removeSnippet(snippet.id);
 
-    SearchResult r;
-    r.id       = snippet.id;
-    r.type     = SearchResult::Type::Snippet;
-    r.title    = snippet.title;
-    r.subtitle = snippet.category;
-    m_allResults.append(r);
+    SearchResult result;
+    result.id       = snippet.id;
+    result.type     = SearchResult::Type::Snippet;
+    result.title    = snippet.title;
+    result.subtitle = snippet.category;
 
-    for (const auto &token : tokenize(snippet.title))
-        m_index[token].append(r);
-    for (const auto &tag : snippet.tags)
-        for (const auto &token : tokenize(tag))
-            m_index[token].append(r);
+    m_allResults.append(result);
+
+    for (const QString &token : tokenize(snippet.title))
+        m_index[token].append(result);
+
+    for (const QString &token : tokenize(snippet.category))
+        m_index[token].append(result);
+
+    for (const QString &tag : snippet.tags)
+        for (const QString &token : tokenize(tag))
+            m_index[token].append(result);
 }
 
+// ---------------------------------------------------------------------------
 void SearchIndex::upsert(const Solution &solution)
 {
     removeSolution(solution.id);
 
-    SearchResult r;
-    r.id       = solution.id;
-    r.type     = SearchResult::Type::Solution;
-    r.title    = solution.title;
-    r.subtitle = solution.platform;
-    m_allResults.append(r);
+    SearchResult result;
+    result.id       = solution.id;
+    result.type     = SearchResult::Type::Solution;
+    result.title    = solution.title;
+    result.subtitle = solution.platform;
 
-    for (const auto &token : tokenize(solution.title))
-        m_index[token].append(r);
-    for (const auto &topic : solution.topics)
-        for (const auto &token : tokenize(topic))
-            m_index[token].append(r);
+    m_allResults.append(result);
+
+    for (const QString &token : tokenize(solution.title))
+        m_index[token].append(result);
+
+    for (const QString &token : tokenize(solution.platform))
+        m_index[token].append(result);
+
+    for (const QString &topic : solution.topics)
+        for (const QString &token : tokenize(topic))
+            m_index[token].append(result);
 }
 
+// ---------------------------------------------------------------------------
 void SearchIndex::removeSnippet(int id)
 {
-    m_allResults.removeIf([id](const SearchResult &r){
+    m_allResults.removeIf([id](const SearchResult &r) {
         return r.type == SearchResult::Type::Snippet && r.id == id;
     });
-    for (auto &list : m_index)
-        list.removeIf([id](const SearchResult &r){
+
+    for (auto &list : m_index) {
+        list.removeIf([id](const SearchResult &r) {
             return r.type == SearchResult::Type::Snippet && r.id == id;
         });
+    }
 }
 
+// ---------------------------------------------------------------------------
 void SearchIndex::removeSolution(int id)
 {
-    m_allResults.removeIf([id](const SearchResult &r){
+    m_allResults.removeIf([id](const SearchResult &r) {
         return r.type == SearchResult::Type::Solution && r.id == id;
     });
-    for (auto &list : m_index)
-        list.removeIf([id](const SearchResult &r){
+
+    for (auto &list : m_index) {
+        list.removeIf([id](const SearchResult &r) {
             return r.type == SearchResult::Type::Solution && r.id == id;
         });
+    }
+}
+
+// ---------------------------------------------------------------------------
+QList<SearchResult> SearchIndex::search(const QString &query) const
+{
+    if (query.trimmed().isEmpty())
+        return m_allResults;
+
+    const QList<QString> tokens = tokenize(query);
+    if (tokens.isEmpty())
+        return {};
+
+    QHash<int, int> scoreMap;        
+    QHash<int, SearchResult> byKey;  
+
+    auto makeKey = [](const SearchResult &r) {
+        return (r.type == SearchResult::Type::Snippet ? 0 : 100000) + r.id;
+    };
+
+    for (const QString &token : tokens) {
+        if (m_index.contains(token)) {
+            for (const SearchResult &r : m_index[token]) {
+                const int key = makeKey(r);
+                byKey[key] = r;
+
+                const bool isTitleMatch =
+                    r.title.toLower().contains(token);
+
+                scoreMap[key] += isTitleMatch ? 2 : 1;
+            }
+        }
+
+        for (auto it = m_index.constBegin(); it != m_index.constEnd(); ++it) {
+            if (it.key().startsWith(token) && it.key() != token) {
+                for (const SearchResult &r : it.value()) {
+                    const int key = makeKey(r);
+                    byKey[key] = r;
+                    scoreMap[key] += 1;
+                }
+            }
+        }
+    }
+
+    QList<SearchResult> results = byKey.values();
+    std::sort(results.begin(), results.end(),
+              [&scoreMap, &makeKey](const SearchResult &a, const SearchResult &b) {
+                  return scoreMap[makeKey(a)] > scoreMap[makeKey(b)];
+              });
+
+    return results;
+}
+
+QList<QString> SearchIndex::tokenize(const QString &text) const
+{
+    const QStringList parts = text.toLower().split(
+        QRegularExpression("[^a-z0-9]+"), Qt::SkipEmptyParts);
+
+    QList<QString> tokens;
+    for (const QString &p : parts)
+        if (!p.isEmpty())
+            tokens.append(p);
+
+    return tokens;
 }
