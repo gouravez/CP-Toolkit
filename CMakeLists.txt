@@ -21,7 +21,7 @@ find_package(Qt6 REQUIRED COMPONENTS
 set(SOURCES
     src/main.cpp
 
-    src/ui/editor/cppsyntaxhighlighter.cpp
+    src/ui/editor/Cppsyntaxhighlighter.cpp
     src/ui/mainwindow.cpp
     src/ui/sidebar.cpp
     src/ui/snippets/snippetlistview.cpp
@@ -44,7 +44,7 @@ set(SOURCES
 )
 
 set(HEADERS
-    src/ui/editor/cppsyntaxhighlighter.h
+    src/ui/editor/Cppsyntaxhighlighter.h
     src/ui/mainwindow.h
     src/ui/sidebar.h
     src/ui/snippets/snippetlistview.h

@@ -2,6 +2,8 @@
 
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QDir>
+#include <QFileInfo>
 #include <QDebug>
 
 SqliteDatabase::SqliteDatabase(const QString &path)
@@ -15,6 +17,15 @@ SqliteDatabase::~SqliteDatabase()
 
 bool SqliteDatabase::open()
 {
+    const QDir dir = QFileInfo(m_path).absoluteDir();
+    if (!dir.exists()) {
+        if (!dir.mkpath(".")) {
+            qCritical() << "Failed to create database directory:" << dir.absolutePath();
+            return false;
+        }
+        qDebug() << "Created database directory:" << dir.absolutePath();
+    }
+
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(m_path);
 
