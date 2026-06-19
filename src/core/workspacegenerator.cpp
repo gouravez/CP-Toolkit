@@ -19,6 +19,23 @@ void WorkspaceGenerator::setProblemCount(int count)
     m_problemCount = qBound(1, count, 26);
 }
 
+void WorkspaceGenerator::setCustomTemplate(const QString &content)
+{
+    m_customTemplate    = content;
+    m_hasCustomTemplate = !content.trimmed().isEmpty();
+}
+
+void WorkspaceGenerator::clearCustomTemplate()
+{
+    m_customTemplate.clear();
+    m_hasCustomTemplate = false;
+}
+
+bool WorkspaceGenerator::hasCustomTemplate() const
+{
+    return m_hasCustomTemplate;
+}
+
 QString WorkspaceGenerator::workspacePath() const
 {
     return m_workspacePath;
@@ -73,6 +90,8 @@ bool WorkspaceGenerator::create()
     m_workspacePath = base.absoluteFilePath(folderName);
     QDir workspace(m_workspacePath);
 
+    const QString tmpl = activeTemplate();
+
     for (int i = 0; i < m_problemCount; ++i) {
         const QString letter = QString(QChar(QLatin1Char(static_cast<char>('A' + i))));
         const QString path   = workspace.filePath(letter + QStringLiteral(".cpp"));
@@ -84,12 +103,17 @@ bool WorkspaceGenerator::create()
         }
 
         QTextStream ts(&file);
-        ts << defaultTemplate();
+        ts << tmpl;
 
         m_letters.append(letter);
     }
 
     return true;
+}
+
+QString WorkspaceGenerator::activeTemplate() const
+{
+    return m_hasCustomTemplate ? m_customTemplate : defaultTemplate();
 }
 
 QString WorkspaceGenerator::defaultTemplate() const

@@ -1,19 +1,25 @@
 #include "workspaceview.h"
 #include "../editor/Cppsyntaxhighlighter.h"
 #include "../../core/workspacegenerator.h"
+#include "../../core/templategenerator.h"
 
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QFont>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QListWidgetItem>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QSplitter>
 #include <QStandardPaths>
 #include <QTextStream>
 #include <QVBoxLayout>
@@ -78,6 +84,34 @@ void WorkspaceView::setupUI()
     dirRow->addWidget(m_outputDirEdit, 1);
     dirRow->addWidget(m_browseDirBtn);
     formVLayout->addLayout(dirRow);
+
+    QHBoxLayout *templateRow = new QHBoxLayout;
+    QLabel *templateLabel = new QLabel(tr("Template file:"), formBox);
+    templateLabel->setFixedWidth(110);
+    m_templatePathEdit = new QLineEdit(formBox);
+    m_templatePathEdit->setObjectName(QStringLiteral("FormLineEdit"));
+    m_templatePathEdit->setReadOnly(true);
+    m_templatePathEdit->setPlaceholderText(
+        tr("Optional — using built-in default template"));
+    m_browseTemplateBtn = new QPushButton(tr("Browse…"), formBox);
+    m_browseTemplateBtn->setObjectName(QStringLiteral("SecondaryButton"));
+    m_browseTemplateBtn->setCursor(Qt::PointingHandCursor);
+    m_browseTemplateBtn->setFixedWidth(80);
+    m_fromSnippetsBtn = new QPushButton(tr("From Snippets…"), formBox);
+    m_fromSnippetsBtn->setObjectName(QStringLiteral("SecondaryButton"));
+    m_fromSnippetsBtn->setCursor(Qt::PointingHandCursor);
+    m_fromSnippetsBtn->setFixedWidth(120);
+    m_clearTemplateBtn = new QPushButton(tr("Use Default"), formBox);
+    m_clearTemplateBtn->setObjectName(QStringLiteral("SecondaryButton"));
+    m_clearTemplateBtn->setCursor(Qt::PointingHandCursor);
+    m_clearTemplateBtn->setFixedWidth(90);
+    m_clearTemplateBtn->setEnabled(false);
+    templateRow->addWidget(templateLabel);
+    templateRow->addWidget(m_templatePathEdit, 1);
+    templateRow->addWidget(m_browseTemplateBtn);
+    templateRow->addWidget(m_fromSnippetsBtn);
+    templateRow->addWidget(m_clearTemplateBtn);
+    formVLayout->addLayout(templateRow);
 
     QHBoxLayout *actionRow = new QHBoxLayout;
     m_createBtn = new QPushButton(tr("Create Workspace"), formBox);
@@ -155,6 +189,12 @@ void WorkspaceView::setupUI()
 
     connect(m_browseDirBtn, &QPushButton::clicked,
             this, &WorkspaceView::onBrowseDirectory);
+    connect(m_browseTemplateBtn, &QPushButton::clicked,
+            this, &WorkspaceView::onBrowseTemplate);
+    connect(m_fromSnippetsBtn, &QPushButton::clicked,
+            this, &WorkspaceView::onBuildFromSnippets);
+    connect(m_clearTemplateBtn, &QPushButton::clicked,
+            this, &WorkspaceView::onClearTemplate);
     connect(m_createBtn, &QPushButton::clicked,
             this, &WorkspaceView::onCreateClicked);
     connect(m_fileList, &QListWidget::currentRowChanged,
@@ -170,6 +210,155 @@ void WorkspaceView::onBrowseDirectory()
 
     if (!dir.isEmpty())
         m_outputDirEdit->setText(dir);
+}
+
+void WorkspaceView::onBrowseTemplate()
+{
+    const QString path = QFileDialog::getOpenFileName(
+        this, tr("Select Template File"), QString(),
+        tr("C++ Source Files (*.cpp *.cc *.cxx *.h *.hpp);;All Files (*)"));
+
+    if (path.isEmpty())
+        return;
+
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        setStatusMessage(tr("Could not read template file: %1").arg(path), true);
+        return;
+    }
+
+    m_inlineTemplateContent.clear();  
+    m_templatePathEdit->setText(QDir::toNativeSeparators(path));
+    m_clearTemplateBtn->setEnabled(true);
+    setStatusMessage(tr("Custom template loaded: %1").arg(QFileInfo(path).fileName()));
+}
+
+void WorkspaceView::onClearTemplate()
+{
+    m_templatePathEdit->clear();
+    m_inlineTemplateContent.clear();
+    m_clearTemplateBtn->setEnabled(false);
+    setStatusMessage(tr("Reverted to built-in default template."));
+}
+
+void WorkspaceView::setSnippets(const QList<Snippet> &snippets)
+{
+    m_snippets = snippets;
+}
+
+void WorkspaceView::onBuildFromSnippets()
+{
+    if (m_snippets.isEmpty()) {
+        setStatusMessage(tr("No snippets available yet — add some in the Snippets tab first."), true);
+        return;
+    }
+
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Build Template From Snippets"));
+    dialog.resize(700, 460);
+
+    QVBoxLayout *root = new QVBoxLayout(&dialog);
+
+    QLabel *hint = new QLabel(
+        tr("Pick the snippets to combine — this uses the same assembler as "
+           "the Template Generator, so includes and naming conflicts are "
+           "resolved automatically."), &dialog);
+    hint->setWordWrap(true);
+    root->addWidget(hint);
+
+    QSplitter *splitter = new QSplitter(Qt::Horizontal, &dialog);
+
+    QListWidget *list = new QListWidget(splitter);
+    for (const Snippet &s : m_snippets) {
+        QListWidgetItem *item = new QListWidgetItem(s.title, list);
+        item->setData(Qt::UserRole, s.id);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Unchecked);
+        if (!s.category.isEmpty())
+            item->setToolTip(s.category);
+    }
+    splitter->addWidget(list);
+
+    QPlainTextEdit *preview = new QPlainTextEdit(splitter);
+    preview->setReadOnly(true);
+    preview->setLineWrapMode(QPlainTextEdit::NoWrap);
+    QFont monoFont(QStringLiteral("Consolas"));
+    monoFont.setStyleHint(QFont::Monospace);
+    monoFont.setPointSize(10);
+    preview->setFont(monoFont);
+    preview->setPlainText(tr("// Check snippets on the left to preview the assembled template."));
+    new CppSyntaxHighlighter(preview->document());
+    splitter->addWidget(preview);
+
+    splitter->setStretchFactor(0, 1);
+    splitter->setStretchFactor(1, 2);
+    root->addWidget(splitter, 1);
+
+    QDialogButtonBox *buttons = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    buttons->button(QDialogButtonBox::Ok)->setText(tr("Use This Template"));
+    buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
+    root->addWidget(buttons);
+
+    auto regenerate = [list, preview, this, okBtn = buttons->button(QDialogButtonBox::Ok)]() {
+        QList<Snippet> selected;
+        for (int i = 0; i < list->count(); ++i) {
+            QListWidgetItem *item = list->item(i);
+            if (item->checkState() == Qt::Checked) {
+                const int id = item->data(Qt::UserRole).toInt();
+                for (const Snippet &s : m_snippets) {
+                    if (s.id == id) {
+                        selected.append(s);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (selected.isEmpty()) {
+            preview->setPlainText(tr("// Check snippets on the left to preview the assembled template."));
+            okBtn->setEnabled(false);
+            return;
+        }
+
+        TemplateGenerator gen;
+        gen.setSnippets(selected);
+        preview->setPlainText(gen.generate());
+        okBtn->setEnabled(true);
+    };
+
+    connect(list, &QListWidget::itemChanged, &dialog, regenerate);
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    int checkedCount = 0;
+    for (int i = 0; i < list->count(); ++i) {
+        if (list->item(i)->checkState() == Qt::Checked)
+            ++checkedCount;
+    }
+
+    setTemplateContent(
+        preview->toPlainText(),
+        tr("Assembled from %1 snippet(s)").arg(checkedCount));
+}
+
+void WorkspaceView::setTemplateContent(const QString &code, const QString &label)
+{
+    if (code.trimmed().isEmpty())
+        return;
+
+    m_inlineTemplateContent = code;
+
+    const QString shown = label.isEmpty()
+        ? tr("Assembled template (%1 chars) from Template Generator").arg(code.size())
+        : label;
+    m_templatePathEdit->setText(shown);
+
+    m_clearTemplateBtn->setEnabled(true);
+    setStatusMessage(tr("Template Generator output set as workspace boilerplate."));
 }
 
 void WorkspaceView::onCreateClicked()
@@ -193,6 +382,21 @@ void WorkspaceView::onCreateClicked()
     gen.setBaseDirectory(baseDir);
     gen.setContestName(contestName);
     gen.setProblemCount(m_problemCountSpin->value());
+
+    if (!m_inlineTemplateContent.trimmed().isEmpty()) {
+        gen.setCustomTemplate(m_inlineTemplateContent);
+    } else {
+        const QString templatePath = m_templatePathEdit->text().trimmed();
+        if (!templatePath.isEmpty()) {
+            QFile templateFile(templatePath);
+            if (!templateFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                setStatusMessage(tr("Could not read template file: %1").arg(templatePath), true);
+                return;
+            }
+            QTextStream templateStream(&templateFile);
+            gen.setCustomTemplate(templateStream.readAll());
+        }
+    }
 
     if (!gen.create()) {
         setStatusMessage(gen.errorString(), true);
@@ -299,5 +503,8 @@ void WorkspaceView::onClearFormClicked()
 {
     m_contestNameEdit->clear();
     m_problemCountSpin->setValue(6);
+    m_templatePathEdit->clear();
+    m_inlineTemplateContent.clear();
+    m_clearTemplateBtn->setEnabled(false);
     setStatusMessage("");
 }

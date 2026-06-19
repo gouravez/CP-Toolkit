@@ -1,6 +1,9 @@
 #pragma once
 
+#include "../../models.h"
+
 #include <QWidget>
+#include <QList>
 
 class QLabel;
 class QLineEdit;
@@ -17,8 +20,14 @@ class WorkspaceView : public QWidget
 public:
     explicit WorkspaceView(QWidget *parent = nullptr);
 
+    void setTemplateContent(const QString &code, const QString &label = QString());
+    void setSnippets(const QList<Snippet> &snippets);
+
 private slots:
     void onBrowseDirectory();
+    void onBrowseTemplate();
+    void onBuildFromSnippets();
+    void onClearTemplate();
     void onCreateClicked();
     void onProblemSelected(int row);
     void onSaveClicked();
@@ -39,6 +48,13 @@ private:
     QPushButton *m_createBtn        = nullptr;
     QPushButton *m_clearFormBtn;
     QLabel      *m_statusLabel      = nullptr;
+
+    QLineEdit   *m_templatePathEdit = nullptr;
+    QPushButton *m_browseTemplateBtn = nullptr;
+    QPushButton *m_fromSnippetsBtn   = nullptr;
+    QPushButton *m_clearTemplateBtn  = nullptr;
+    QString      m_inlineTemplateContent;
+    QList<Snippet> m_snippets;
 
     QListWidget *m_fileList         = nullptr;
 

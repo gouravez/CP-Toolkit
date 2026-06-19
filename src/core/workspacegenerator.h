@@ -12,6 +12,10 @@ public:
     void setContestName(const QString &name);
     void setProblemCount(int count);
 
+    void setCustomTemplate(const QString &content);
+    void clearCustomTemplate();
+    bool hasCustomTemplate() const;
+
     bool create();
 
     QString workspacePath() const;
@@ -21,10 +25,14 @@ public:
 
 private:
     QString defaultTemplate() const;
+    QString activeTemplate() const;
 
     QString m_baseDir;
     QString m_contestName;
     int     m_problemCount = 6;
+
+    QString m_customTemplate;
+    bool    m_hasCustomTemplate = false;
 
     QString        m_workspacePath;
     QList<QString> m_letters;

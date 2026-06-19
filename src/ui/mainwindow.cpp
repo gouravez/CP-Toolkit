@@ -169,6 +169,7 @@ void MainWindow::refreshSnippets()
     m_snippetEditor->setKnownCategories(categories);
 
     m_templateView->setSnippets(snippets);
+    m_workspaceView->setSnippets(snippets);
 }
 
 void MainWindow::refreshSolutions()
