@@ -26,6 +26,7 @@ public:
 private:
     QString defaultTemplate() const;
     QString activeTemplate() const;
+    QString sanitizeFolderName(const QString &name) const;
 
     QString m_baseDir;
     QString m_contestName;

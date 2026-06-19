@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QRegularExpression>
 #include <QTextStream>
 
 void WorkspaceGenerator::setBaseDirectory(const QString &dir)
@@ -74,7 +75,15 @@ bool WorkspaceGenerator::create()
         return false;
     }
 
-    const QString folderName = m_contestName.trimmed();
+    const QString folderName = sanitizeFolderName(m_contestName);
+
+    if (folderName.isEmpty()) {
+        m_errorString = QStringLiteral(
+            "Contest name must contain at least one valid character "
+            "(letters, numbers, spaces, or punctuation other than / \\ : * ? \" < > |).");
+        return false;
+    }
+
     QDir base(m_baseDir);
 
     if (!base.exists()) {
@@ -109,6 +118,21 @@ bool WorkspaceGenerator::create()
     }
 
     return true;
+}
+
+QString WorkspaceGenerator::sanitizeFolderName(const QString &name) const
+{
+    QString sanitized = name.trimmed();
+
+    static const QRegularExpression invalidChars(
+        QStringLiteral("[<>:\"/\\\\|?*\\x00-\\x1F]"));
+    sanitized.replace(invalidChars, QStringLiteral("_"));
+
+    while (!sanitized.isEmpty()
+           && (sanitized.endsWith(QLatin1Char('.')) || sanitized.endsWith(QLatin1Char(' '))))
+        sanitized.chop(1);
+
+    return sanitized;
 }
 
 QString WorkspaceGenerator::activeTemplate() const
