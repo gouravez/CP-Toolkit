@@ -40,19 +40,17 @@ jobs:
             https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x linuxdeployqt.AppImage
 
-      - name: Debug Qt SQL plugins
+      - name: Show Qt SQL plugins
         run: |
-          echo "=== SQL Plugins Found ==="
-          find ~/Qt -name "libqsql*.so" 2>/dev/null || true
+          echo "QT_PLUGIN_PATH=$QT_PLUGIN_PATH"
+          find "$QT_PLUGIN_PATH" -name "libqsql*.so" || true
 
       - name: Remove Mimer SQL plugin
         run: |
-          find ~/Qt -name "libqsqlmimer.so" -exec rm -f {} \; || true
+          find "$QT_PLUGIN_PATH" -name "libqsqlmimer.so" -delete || true
 
-      - name: Verify removal
-        run: |
-          echo "=== Remaining SQL Plugins ==="
-          find ~/Qt -name "libqsql*.so" 2>/dev/null || true
+          echo "After removal:"
+          find "$QT_PLUGIN_PATH" -name "libqsql*.so" || true
 
       - name: Create AppImage
         env:
