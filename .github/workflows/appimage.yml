@@ -1,0 +1,53 @@
+name: Build AppImage
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.0'
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential \
+            cmake \
+            wget \
+            fuse \
+            libfuse2
+
+      - name: Configure
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Download linuxdeployqt
+        run: |
+          wget -O linuxdeployqt.AppImage \
+          https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+
+          chmod +x linuxdeployqt.AppImage
+
+      - name: Create AppImage
+        env:
+          VERSION: 1.0.0
+        run: |
+          ./linuxdeployqt.AppImage cpt.desktop -appimage
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: CPToolkit-AppImage
+          path: "*.AppImage"
