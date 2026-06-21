@@ -27,7 +27,7 @@ Configuring Qt with CMake on Windows is often the biggest hurdle. You can choose
 
 ## Phase 1: Install Qt
 
-1. Download the **Qt Online Installer** from the Qt Open Source Download page.
+1. Download the **Qt Online Installer** from the Qt Open Source Download page (https://www.qt.io/development/download-qt-installer).
 2. Run the installer and log in with your Qt account.
 3. Select **Custom Installation**.
 4. Expand **Qt → Latest Qt 6 Release** (e.g., Qt 6.8.x).
