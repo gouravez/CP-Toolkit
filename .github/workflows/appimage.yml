@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -36,9 +37,12 @@ jobs:
       - name: Download linuxdeployqt
         run: |
           wget -O linuxdeployqt.AppImage \
-          https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
-
+            https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x linuxdeployqt.AppImage
+
+      - name: Remove problematic Qt SQL plugin
+        run: |
+          find ~/Qt -name "libqsqlmimer.so" -delete || true
 
       - name: Create AppImage
         env:
