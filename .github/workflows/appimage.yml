@@ -52,6 +52,11 @@ jobs:
           echo "After removal:"
           find "$QT_PLUGIN_PATH" -name "libqsql*.so" || true
 
+      - name: Prepare AppDir icon
+        run: |
+          cp resources/icons/cpt.png build/cpt.png
+          ls -la build/cpt.png
+
       - name: Create AppImage
         env:
           VERSION: 1.0.0
