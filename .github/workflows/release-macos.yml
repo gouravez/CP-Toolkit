@@ -1,0 +1,94 @@
+name: macOS Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build & Package macOS DMG
+    runs-on: macos-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # ── 2. Install Qt 6 via aqtinstall ────────────────────────────────────
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: mac
+          target: desktop
+          arch: clang_64
+          modules: ''          # Core, Widgets, Sql are included by default
+          cache: true
+
+      # ── 3. Build ───────────────────────────────────────────────────────────
+      - name: Configure (CMake)
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${Qt6_DIR}"
+
+      - name: Compile
+        run: cmake --build build --config Release -j$(sysctl -n hw.logicalcpu)
+
+      # ── 4. Bundle (.app) ──────────────────────────────────────────────────
+      - name: Run macdeployqt
+        run: |
+          # macdeployqt is in the Qt bin directory
+          QT_BIN="$(dirname $(which qmake))"
+          "$QT_BIN/macdeployqt" build/CPT.app -verbose=1
+
+      # ── 5. Create DMG ─────────────────────────────────────────────────────
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Build DMG
+        run: |
+          VERSION="${GITHUB_REF_NAME:-dev}"
+          DMG_NAME="CPT-${VERSION}-macOS.dmg"
+
+          create-dmg \
+            --volname "CP Toolkit" \
+            --volicon "build/CPT.app/Contents/Resources/appicon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "CPT.app" 175 190 \
+            --hide-extension "CPT.app" \
+            --app-drop-link 425 190 \
+            --no-internet-enable \
+            "${DMG_NAME}" \
+            "build/CPT.app" \
+          || true   # create-dmg exits 2 when no code-signing; treat as ok
+
+          # Fallback: plain hdiutil DMG if create-dmg fails
+          if [ ! -f "${DMG_NAME}" ]; then
+            hdiutil create -volname "CP Toolkit" \
+              -srcfolder build/CPT.app \
+              -ov -format UDZO \
+              "${DMG_NAME}"
+          fi
+
+          echo "DMG_NAME=${DMG_NAME}" >> "$GITHUB_ENV"
+
+      # ── 6. Upload artifact (always) ───────────────────────────────────────
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CPT-macOS-DMG
+          path: ${{ env.DMG_NAME }}
+          retention-days: 30
+
+      # ── 7. Attach to GitHub Release (tag builds only) ────────────────────
+      - name: Attach DMG to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.DMG_NAME }}
+          generate_release_notes: true
