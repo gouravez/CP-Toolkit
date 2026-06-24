@@ -1,4 +1,4 @@
-# 🚀 Competitive Programming Toolkit (CPT)
+# Competitive Programming Toolkit (CPT)
 
 > An offline-first, high-performance desktop environment built to eliminate friction during competitive programming contests.
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 | Guide | Description |
 |---------|------------|
@@ -20,7 +20,7 @@
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 
 - [Core Features](#-core-features)
 - [Tech Stack](#-tech-stack)
@@ -33,9 +33,9 @@
 
 ---
 
-# ✨ Core Features
+# Core Features
 
-## 📚 Knowledge Management
+## Knowledge Management
 
 ### Snippet Manager
 
@@ -100,7 +100,7 @@ Search across:
 
 ---
 
-## ⚡ Contest Environment
+## Contest Environment
 
 ### Contest Workspace Generator
 
@@ -153,7 +153,7 @@ The assembler automatically:
 
 ---
 
-## 🐛 Debugging & Validation
+## Debugging & Validation
 
 ### Local Stress Tester
 
@@ -191,7 +191,7 @@ Benefits:
 
 ---
 
-# 🛠 Tech Stack
+# Tech Stack
 
 | Component | Technology |
 |------------|------------|
@@ -208,11 +208,11 @@ Qt Modules:
 
 ---
 
-# 🚀 Quick Start
+# Quick Start
 
 For complete setup instructions, see:
 
-📖 **[Installation Guide](docs/installation.md)**
+**[Installation Guide](docs/installation.md)**
 
 ## Clone Repository
 
@@ -271,7 +271,7 @@ build\CPT.exe
 
 ---
 
-# 🏗 Architecture Overview
+# Architecture Overview
 
 The project follows a layered architecture.
 
@@ -327,11 +327,11 @@ Plain data-transfer objects shared between layers.
 
 For more details see:
 
-📖 [Architecture Documentation](docs/architecture.md)
+[Architecture Documentation](docs/architecture.md)
 
 ---
 
-# 💡 Workflow Tips
+# Workflow Tips
 
 ### Deterministic Stress Testing
 
@@ -363,7 +363,7 @@ to quickly start the next problem.
 
 ---
 
-# 🗺 Roadmap
+# Roadmap
 
 - [ ] Dark / Light Theme Toggle
 - [ ] GitHub Gist Synchronization
@@ -374,7 +374,7 @@ to quickly start the next problem.
 
 ---
 
-# 🤝 Contributing
+# Contributing
 
 Contributions are welcome.
 
@@ -392,7 +392,7 @@ Then open a Pull Request.
 
 ---
 
-# 📜 License
+# License
 
 Distributed under the MIT License.
 
@@ -400,7 +400,7 @@ See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## ⭐ Support
+## Support
 
 If you find this project useful:
 
@@ -408,4 +408,4 @@ If you find this project useful:
 - Share it with fellow competitive programmers
 - Suggest new features through Issues
 
-Happy Coding! 🚀
+Happy Coding!
