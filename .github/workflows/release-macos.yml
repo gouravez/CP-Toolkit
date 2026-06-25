@@ -32,11 +32,11 @@ jobs:
       # ── 3. Build ───────────────────────────────────────────────────────────
       - name: Configure (CMake)
         run: |
-          # Qt6_DIR is e.g. .../6.8.3/clang_64/lib/cmake/Qt6
-          # Strip 4 suffix components to get the Qt root (.../6.8.3/clang_64)
-          QT_ROOT="${Qt6_DIR%/*/*/*/*}"
-          echo "Qt6_DIR=$Qt6_DIR"
+          # Locate Qt root: macdeployqt is in the bin/ dir alongside qmake
+          QT_ROOT=$(dirname $(which macdeployqt))
+          QT_ROOT=$(dirname "$QT_ROOT")
           echo "QT_ROOT=$QT_ROOT"
+          echo "QT_ROOT=$QT_ROOT" >> "$GITHUB_ENV"
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$QT_ROOT"
@@ -47,7 +47,6 @@ jobs:
       # ── 4. Bundle (.app) ──────────────────────────────────────────────────
       - name: Run macdeployqt
         run: |
-          QT_ROOT="${Qt6_DIR%/*/*/*/*}"
           "$QT_ROOT/bin/macdeployqt" build/CPT.app -verbose=1
 
       # ── 5. Create DMG ─────────────────────────────────────────────────────
