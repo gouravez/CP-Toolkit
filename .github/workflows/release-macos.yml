@@ -34,7 +34,7 @@ jobs:
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$IQTA_QT_ROOT"
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
 
       - name: Compile
         run: cmake --build build --config Release -j$(sysctl -n hw.logicalcpu)
@@ -42,7 +42,7 @@ jobs:
       # ── 4. Bundle (.app) ──────────────────────────────────────────────────
       - name: Run macdeployqt
         run: |
-          "$IQTA_QT_ROOT/bin/macdeployqt" build/CPT.app -verbose=1
+          "$QT_ROOT_DIR/bin/macdeployqt" build/CPT.app -verbose=1
 
       # ── 5. Create DMG ─────────────────────────────────────────────────────
       - name: Install create-dmg
