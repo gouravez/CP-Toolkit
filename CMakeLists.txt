@@ -90,10 +90,20 @@ set(RESOURCES
     resources/app.qrc
 )
 
+# ── macOS icon ────────────────────────────────────────────────────────────────
+if(APPLE)
+    set(MACOS_ICON "${CMAKE_SOURCE_DIR}/resources/icons/cpt.icns")
+    set_source_files_properties("${MACOS_ICON}" PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+    )
+endif()
+
 qt_add_executable(CPT
     ${SOURCES}
     ${HEADERS}
     ${RESOURCES}
+    # Include icon in the build on macOS so it gets copied into the .app bundle
+    $<$<BOOL:${APPLE}>:${MACOS_ICON}>
 )
 
 target_include_directories(CPT PRIVATE
@@ -109,9 +119,21 @@ target_link_libraries(CPT PRIVATE
     Qt6::Sql
 )
 
+# ── Platform-specific target properties ───────────────────────────────────────
 if(WIN32)
     set_target_properties(CPT PROPERTIES
         WIN32_EXECUTABLE $<CONFIG:Release>
+    )
+endif()
+
+if(APPLE)
+    set_target_properties(CPT PROPERTIES
+        MACOSX_BUNDLE                 TRUE
+        MACOSX_BUNDLE_BUNDLE_NAME     "CP Toolkit"
+        MACOSX_BUNDLE_BUNDLE_VERSION  ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+        MACOSX_BUNDLE_GUI_IDENTIFIER  "com.cpt.toolkit"
+        MACOSX_BUNDLE_ICON_FILE       "cpt.icns"
     )
 endif()
 

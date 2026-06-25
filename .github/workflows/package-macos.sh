@@ -21,6 +21,16 @@ VERSION="${1:-dev}"
 APP_NAME="CPT"
 DMG_NAME="${APP_NAME}-${VERSION}-macOS.dmg"
 BUILD_DIR="build-release"
+ICON_PATH="resources/icons/cpt.icns"
+
+# ── Preflight checks ──────────────────────────────────────────────────────────
+for tool in cmake; do
+  if ! command -v "$tool" &>/dev/null; then
+    echo "❌  Required tool not found: $tool"
+    echo "    Install with: brew install cmake"
+    exit 1
+  fi
+done
 
 # Detect Qt prefix from Homebrew (works for both Apple Silicon and Intel)
 detect_qt_prefix() {
@@ -91,10 +101,19 @@ echo "💿  Creating DMG..."
 # Remove stale DMG
 rm -f "$DMG_NAME"
 
+# Resolve volicon flag
+VOLICON_FLAG=()
+if [[ -f "$ICON_PATH" ]]; then
+  VOLICON_FLAG=(--volicon "$ICON_PATH")
+else
+  echo "⚠️   Icon not found at $ICON_PATH — DMG will use default volume icon"
+fi
+
 if command -v create-dmg &>/dev/null; then
   # Pretty DMG with drag-to-Applications UI
   create-dmg \
     --volname "CP Toolkit" \
+    "${VOLICON_FLAG[@]}" \
     --window-pos 200 120 \
     --window-size 600 400 \
     --icon-size 100 \
@@ -103,8 +122,14 @@ if command -v create-dmg &>/dev/null; then
     --app-drop-link 425 190 \
     --no-internet-enable \
     "$DMG_NAME" \
-    "$APP_PATH" \
-  || true   # exit 2 = no code signing, still produced a valid DMG
+    "$APP_PATH"
+  EXIT_CODE=$?
+
+  # Exit code 2 = no code signing, DMG is still valid
+  if [[ $EXIT_CODE -ne 0 && $EXIT_CODE -ne 2 ]]; then
+    echo "❌  create-dmg failed with exit code $EXIT_CODE"
+    exit $EXIT_CODE
+  fi
 
   # If create-dmg still didn't produce the file, fall back
   if [[ ! -f "$DMG_NAME" ]]; then

@@ -5,6 +5,8 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
+    # Note: workflow_dispatch uses branch name as GITHUB_REF_NAME (e.g. "main"),
+    # not a version tag. The DMG will be named CPT-main-macOS.dmg when triggered manually.
 
 jobs:
   build-macos:
@@ -30,9 +32,11 @@ jobs:
       # ── 3. Build ───────────────────────────────────────────────────────────
       - name: Configure (CMake)
         run: |
+          # Qt6_DIR points to the CMake config dir; the Qt root is 3 levels up
+          QT_ROOT="$(dirname $(dirname $(dirname $Qt6_DIR)))"
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="${Qt6_DIR}"
+            -DCMAKE_PREFIX_PATH="$QT_ROOT"
 
       - name: Compile
         run: cmake --build build --config Release -j$(sysctl -n hw.logicalcpu)
@@ -40,8 +44,8 @@ jobs:
       # ── 4. Bundle (.app) ──────────────────────────────────────────────────
       - name: Run macdeployqt
         run: |
-          # macdeployqt is in the Qt bin directory
-          QT_BIN="$(dirname $(which qmake))"
+          # Derive macdeployqt path from Qt6_DIR (avoids relying on PATH)
+          QT_BIN="$(dirname $(dirname $(dirname $Qt6_DIR)))/bin"
           "$QT_BIN/macdeployqt" build/CPT.app -verbose=1
 
       # ── 5. Create DMG ─────────────────────────────────────────────────────
@@ -55,7 +59,7 @@ jobs:
 
           create-dmg \
             --volname "CP Toolkit" \
-            --volicon "build/CPT.app/Contents/Resources/appicon.icns" \
+            --volicon "resources/icons/cpt.icns" \
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
@@ -64,10 +68,16 @@ jobs:
             --app-drop-link 425 190 \
             --no-internet-enable \
             "${DMG_NAME}" \
-            "build/CPT.app" \
-          || true   # create-dmg exits 2 when no code-signing; treat as ok
+            "build/CPT.app"
+          EXIT_CODE=$?
 
-          # Fallback: plain hdiutil DMG if create-dmg fails
+          # Exit code 2 = no code signing; DMG is still valid
+          if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 2 ]; then
+            echo "❌ create-dmg failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+
+          # Fallback: plain hdiutil DMG if create-dmg didn't produce a file
           if [ ! -f "${DMG_NAME}" ]; then
             hdiutil create -volname "CP Toolkit" \
               -srcfolder build/CPT.app \
